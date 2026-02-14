@@ -11,6 +11,7 @@ import perfumeBlush from "@/assets/perfume-blush-royale.jpg";
 import perfumeCognac from "@/assets/perfume-cognac-veil.jpg";
 import perfumeRouge from "@/assets/perfume-rouge-imperial.jpg";
 import perfumeVelvet from "@/assets/perfume-velvet-cherry.jpg";
+import perfumeExtra from "@/assets/perfume-extra-grid.jpg";
 import { useState } from "react";
 
 const Index = () => {
@@ -23,6 +24,7 @@ const Index = () => {
     { src: perfumeCognac, alt: "Cognac Veil", label: "Cognac Veil" },
     { src: perfumeRouge, alt: "Rouge Imperial", label: "Rouge Imperial" },
     { src: perfumeVelvet, alt: "Velvet Cherry", label: "Velvet Cherry" },
+    { src: perfumeExtra, alt: "Noir Collection", label: "Noir Collection" },
   ];
 
   return (
@@ -85,7 +87,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Image Grid — Perfume Gallery */}
+      {/* Image Grid — 3x2 layout */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-6">
           <motion.div
@@ -101,36 +103,20 @@ const Index = () => {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {/* Large featured image */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="col-span-2 row-span-2 relative group overflow-hidden"
-            >
-              <img src={galleryImages[0].src} alt={galleryImages[0].alt} className="w-full h-full object-cover aspect-square transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6">
-                <p className="font-display text-2xl text-foreground">{galleryImages[0].label}</p>
-                <p className="font-body text-xs tracking-luxury uppercase text-primary">Signature Blend</p>
-              </div>
-            </motion.div>
-
-            {/* Smaller grid images */}
-            {galleryImages.slice(1).map((img, i) => (
+            {galleryImages.map((img, i) => (
               <motion.div
                 key={img.label}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
+                transition={{ duration: 0.6, delay: i * 0.08 }}
                 className="relative group overflow-hidden aspect-square"
               >
                 <img src={img.src} alt={img.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <p className="font-display text-lg text-foreground">{img.label}</p>
+                  <p className="font-body text-xs tracking-luxury uppercase text-primary">Explore</p>
                 </div>
               </motion.div>
             ))}
@@ -171,8 +157,7 @@ const Index = () => {
               </p>
               <p className="font-elegant text-lg text-muted-foreground leading-relaxed mb-8">
                 Our perfume oils are designed for the modern connoisseur — long-lasting,
-                travel-ready, and endlessly compliment-worthy. Every bottle tells a story of
-                craftsmanship, passion, and the art of scent.
+                travel-ready, and endlessly compliment-worthy.
               </p>
               <Link
                 to="/products"
@@ -185,11 +170,11 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Best Sellers with Background Image */}
-      <section className="relative py-24 overflow-hidden">
+      {/* Best Sellers */}
+      <section className="relative py-28 overflow-hidden">
         <div className="absolute inset-0">
           <img src={productSectionBg} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-background/85" />
+          <div className="absolute inset-0 bg-background/80" />
         </div>
         <div className="relative container mx-auto px-6">
           <motion.div
@@ -213,8 +198,8 @@ const Index = () => {
               No products found. Add products in WooCommerce.
             </p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-              {products.slice(0, 5).map((product, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.slice(0, 4).map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} />
               ))}
             </div>
@@ -222,7 +207,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Coming Soon — Eau de Parfum */}
+      {/* Coming Soon */}
       <section className="py-28 bg-background relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-20 bg-gradient-to-b from-transparent to-primary/30" />
         <div className="container mx-auto px-6 text-center">
@@ -240,25 +225,23 @@ const Index = () => {
               The next chapter of Saint Samson — a full-size Eau de Parfum line arriving Spring 2026.
             </p>
             <div className="flex justify-center gap-8 mb-12">
-              <div className="text-center">
-                <p className="font-display text-3xl text-gold-gradient">50mL</p>
-                <p className="font-body text-xs tracking-luxury uppercase text-muted-foreground mt-1">Volume</p>
-              </div>
-              <div className="w-px bg-border" />
-              <div className="text-center">
-                <p className="font-display text-3xl text-gold-gradient">$58</p>
-                <p className="font-body text-xs tracking-luxury uppercase text-muted-foreground mt-1">Starting</p>
-              </div>
-              <div className="w-px bg-border" />
-              <div className="text-center">
-                <p className="font-display text-3xl text-gold-gradient">5</p>
-                <p className="font-body text-xs tracking-luxury uppercase text-muted-foreground mt-1">Scents</p>
-              </div>
+              {[
+                { value: "50mL", label: "Volume" },
+                { value: "$58", label: "Starting" },
+                { value: "5", label: "Scents" },
+              ].map((stat, i) => (
+                <div key={stat.label} className="flex items-center gap-8">
+                  <div className="text-center">
+                    <p className="font-display text-3xl text-gold-gradient">{stat.value}</p>
+                    <p className="font-body text-xs tracking-luxury uppercase text-muted-foreground mt-1">{stat.label}</p>
+                  </div>
+                  {i < 2 && <div className="w-px h-10 bg-border" />}
+                </div>
+              ))}
             </div>
 
-            {/* Preview grid */}
             <div className="grid grid-cols-5 gap-4 max-w-4xl mx-auto mb-12">
-              {galleryImages.map((img, i) => (
+              {galleryImages.slice(0, 5).map((img, i) => (
                 <motion.div
                   key={img.label}
                   initial={{ opacity: 0, y: 20 }}
@@ -296,7 +279,7 @@ const Index = () => {
               Join the <span className="text-gold-gradient">Inner Circle</span>
             </h2>
             <p className="font-elegant text-lg text-muted-foreground mb-8">
-              Be the first to know about new launches, exclusive offers, and behind-the-scenes stories from our Parisian atelier.
+              Be the first to know about new launches, exclusive offers, and behind-the-scenes stories.
             </p>
             <form
               onSubmit={(e) => { e.preventDefault(); setEmail(""); }}
