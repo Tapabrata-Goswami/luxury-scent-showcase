@@ -41,9 +41,9 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
 
       <Link
         to={`/products/${product.slug}`}
-        className="font-body text-xs tracking-luxury uppercase border border-primary/50 text-primary px-6 py-2.5 hover:bg-primary hover:text-primary-foreground transition-all duration-300 mb-2"
+        className="font-body text-xs tracking-luxury uppercase border-2 border-gold text-foreground px-6 py-2.5 hover:bg-gold hover:text-background transition-all duration-300 mb-2"
       >
-        View Details
+        Quick Add
       </Link>
       <p className="font-body text-sm text-foreground">{parsePrice(product.price)}</p>
     </motion.div>
