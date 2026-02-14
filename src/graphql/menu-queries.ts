@@ -12,3 +12,18 @@ export const GET_MENU = `
     }
   }
 `;
+
+export const GET_ALL_MENU_ITEMS = `
+  query GetAllMenuItems {
+    menuItems(first: 50) {
+      nodes {
+        id
+        label
+        url
+        path
+        parentId
+        order
+      }
+    }
+  }
+`;

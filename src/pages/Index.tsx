@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/ProductCard";
 import GraphQLNotConfigured from "@/components/GraphQLNotConfigured";
@@ -12,11 +12,52 @@ import perfumeCognac from "@/assets/perfume-cognac-veil.jpg";
 import perfumeRouge from "@/assets/perfume-rouge-imperial.jpg";
 import perfumeVelvet from "@/assets/perfume-velvet-cherry.jpg";
 import perfumeExtra from "@/assets/perfume-extra-grid.jpg";
-import { useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 
 const Index = () => {
   const { products, loading, configured } = useProducts();
   const [email, setEmail] = useState("");
+
+  // Parallax refs
+  const heroRef = useRef<HTMLElement>(null);
+  const aboutRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(heroProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(heroProgress, [0, 0.8], [1, 0]);
+
+  const { scrollYProgress: aboutProgress } = useScroll({
+    target: aboutRef,
+    offset: ["start end", "end start"],
+  });
+  const aboutImgY = useTransform(aboutProgress, [0, 1], ["40px", "-40px"]);
+  const aboutTextY = useTransform(aboutProgress, [0, 1], ["60px", "-20px"]);
+
+  // Auto-scroll carousel
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [scrollPos, setScrollPos] = useState(0);
+
+  const scrollCarousel = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const next = scrollPos + el.clientWidth / 5;
+    if (next >= maxScroll) {
+      el.scrollTo({ left: 0, behavior: "smooth" });
+      setScrollPos(0);
+    } else {
+      el.scrollTo({ left: next, behavior: "smooth" });
+      setScrollPos(next);
+    }
+  }, [scrollPos]);
+
+  useEffect(() => {
+    const interval = setInterval(scrollCarousel, 3000);
+    return () => clearInterval(interval);
+  }, [scrollCarousel]);
 
   const galleryImages = [
     { src: perfumeApexion, alt: "Apexion", label: "Apexion" },
@@ -29,14 +70,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroBg} alt="" className="w-full h-full object-cover" />
+      {/* Hero Section with Parallax */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden">
+        <motion.div className="absolute inset-0" style={{ y: heroY }}>
+          <img src={heroBg} alt="" className="w-full h-full object-cover scale-110" />
           <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-        </div>
-        <div className="relative container mx-auto px-6">
+        </motion.div>
+        <motion.div className="relative container mx-auto px-6" style={{ opacity: heroOpacity }}>
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -73,7 +114,7 @@ const Index = () => {
               </Link>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Trust Bar */}
@@ -87,7 +128,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Image Grid — 3x2 layout */}
+      {/* Image Grid — 3x2 */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-6">
           <motion.div
@@ -124,27 +165,17 @@ const Index = () => {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="py-24 bg-secondary/30">
+      {/* About Section with Parallax */}
+      <section ref={aboutRef} className="py-24 bg-secondary/30 overflow-hidden">
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="relative">
+            <motion.div style={{ y: aboutImgY }}>
+              <div className="relative max-w-xs mx-auto md:max-w-sm">
                 <img src={perfumeRouge} alt="Saint Samson Perfume" className="w-full aspect-[3/4] object-cover" />
                 <div className="absolute inset-0 border border-primary/20" />
               </div>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
+            <motion.div style={{ y: aboutTextY }}>
               <p className="font-body text-xs tracking-luxury uppercase text-primary mb-4">Our Story</p>
               <h2 className="font-display text-4xl md:text-5xl text-foreground mb-6 leading-tight">
                 Born in Paris,<br />
@@ -170,7 +201,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Best Sellers */}
+      {/* Best Sellers — Auto-scroll carousel */}
       <section className="relative py-28 overflow-hidden">
         <div className="absolute inset-0">
           <img src={productSectionBg} alt="" className="w-full h-full object-cover" />
@@ -198,9 +229,16 @@ const Index = () => {
               No products found. Add products in WooCommerce.
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.slice(0, 4).map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
+            <div
+              ref={carouselRef}
+              className="flex gap-6 overflow-x-auto scroll-smooth scrollbar-hide pb-4"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {/* Duplicate products to fill 5+ slots for smooth scrolling */}
+              {[...products, ...products, ...products].slice(0, Math.max(products.length, 10)).map((product, i) => (
+                <div key={`${product.id}-${i}`} className="flex-shrink-0 w-[calc(100%/2-12px)] sm:w-[calc(100%/3-16px)] lg:w-[calc(100%/5-20px)]">
+                  <ProductCard product={product} index={i} />
+                </div>
               ))}
             </div>
           )}
@@ -240,7 +278,7 @@ const Index = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-5 gap-4 max-w-4xl mx-auto mb-12">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 max-w-5xl mx-auto mb-12">
               {galleryImages.slice(0, 5).map((img, i) => (
                 <motion.div
                   key={img.label}
