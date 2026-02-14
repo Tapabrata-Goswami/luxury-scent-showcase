@@ -6,6 +6,7 @@ import { CHECKOUT_MUTATION } from "@/graphql/queries";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck, Truck, Tag } from "lucide-react";
+import { COUNTRIES } from "@/data/countries";
 import GraphQLNotConfigured from "@/components/GraphQLNotConfigured";
 
 const parsePrice = (price: string): string => {
@@ -70,10 +71,26 @@ const Checkout = () => {
       );
 
       if (data?.checkout?.redirect) {
-        window.location.href = data.checkout.redirect;
+        navigate("/order-confirmation", {
+          state: {
+            orderNumber: data.checkout.order?.orderNumber ?? "N/A",
+            total: cart?.total,
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+          },
+        });
       } else {
-        toast.success(`Order #${data?.checkout?.order?.orderNumber} placed successfully!`);
-        navigate("/");
+        toast.success(`Order #${data?.checkout?.order?.orderNumber} placed!`);
+        navigate("/order-confirmation", {
+          state: {
+            orderNumber: data?.checkout?.order?.orderNumber ?? "N/A",
+            total: cart?.total,
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+          },
+        });
       }
     } catch {
       toast.error("Checkout failed. Please try again.");
@@ -214,15 +231,20 @@ const Checkout = () => {
                 <label className="font-body text-xs tracking-luxury uppercase text-muted-foreground mb-2 block">
                   Country
                 </label>
-                <input
-                  type="text"
+                <select
                   name="country"
                   required
                   value={formData.country}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   className={inputClass}
-                  placeholder="FR"
-                />
+                >
+                  <option value="">Select country</option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="font-body text-xs tracking-luxury uppercase text-muted-foreground mb-2 block">
