@@ -1,5 +1,5 @@
 // ⚠️ Replace this with your WordPress/WPGraphQL endpoint URL
-const GRAPHQL_ENDPOINT = "https://your-wordpress-site.com/graphql";
+const GRAPHQL_ENDPOINT = "https://cyan-ferret-794343.hostingersite.com/graphql";
 
 export const isGraphQLConfigured = () => {
   return !GRAPHQL_ENDPOINT.includes("your-wordpress-site.com");
