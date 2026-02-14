@@ -12,7 +12,6 @@ const Header = () => {
 
   const itemCount = cart?.contents?.nodes?.reduce((sum, i) => sum + i.quantity, 0) ?? 0;
 
-  // Convert WordPress absolute URLs to relative paths
   const toPath = (item: { path: string; url: string }) => {
     try {
       const url = new URL(item.url);
@@ -22,7 +21,6 @@ const Header = () => {
     }
   };
 
-  // Fallback nav if no WP menu configured
   const fallbackLinks = [
     { label: "Home", path: "/" },
     { label: "Shop", path: "/products" },
@@ -33,8 +31,8 @@ const Header = () => {
     : fallbackLinks;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto flex items-center justify-between py-4 px-6">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-sm border-b border-primary/10">
+      <div className="container mx-auto flex items-center justify-between py-5 px-6">
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Saint Samson Paris" className="h-10 w-auto" />
         </Link>
@@ -71,7 +69,7 @@ const Header = () => {
       </div>
 
       {mobileOpen && (
-        <nav className="md:hidden border-t border-border bg-background/95 backdrop-blur-md px-6 py-4 flex flex-col gap-4">
+        <nav className="md:hidden border-t border-primary/10 bg-background/95 backdrop-blur-md px-6 py-4 flex flex-col gap-4">
           {navLinks.map((link) => (
             <Link
               key={link.path}
