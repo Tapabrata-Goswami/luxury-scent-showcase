@@ -15,32 +15,28 @@ interface MenuResponse {
   menuItems: { nodes: MenuItem[] };
 }
 
+async function fetchMenuWithFallback(location: string): Promise<MenuResponse> {
+  try {
+    return await graphqlFetch<MenuResponse>(GET_MENU, { location });
+  } catch {
+    // Location enum doesn't exist, fallback to all menu items
+    return await graphqlFetch<MenuResponse>(GET_ALL_MENU_ITEMS);
+  }
+}
+
 export const useWooMenu = (location = "PRIMARY") => {
   const configured = isGraphQLConfigured();
 
-  // Try location-based query first, fallback to all menu items
-  const locationQuery = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["menu", location],
-    queryFn: () => graphqlFetch<MenuResponse>(GET_MENU, { location }),
+    queryFn: () => fetchMenuWithFallback(location),
     enabled: configured,
     staleTime: 5 * 60 * 1000,
-    retry: false,
   });
 
-  const fallbackQuery = useQuery({
-    queryKey: ["menu", "all"],
-    queryFn: () => graphqlFetch<MenuResponse>(GET_ALL_MENU_ITEMS),
-    enabled: configured && !!locationQuery.error,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const items = locationQuery.data?.menuItems?.nodes
-    ?? fallbackQuery.data?.menuItems?.nodes
-    ?? [];
-
-  const loading = configured
-    ? locationQuery.isLoading || (!!locationQuery.error && fallbackQuery.isLoading)
-    : false;
-
-  return { items, loading, configured };
+  return {
+    items: data?.menuItems?.nodes ?? [],
+    loading: configured ? isLoading : false,
+    configured,
+  };
 };
