@@ -1,10 +1,28 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Minus, Plus, X } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { useWooCart } from "@/hooks/useWooCart";
+import GraphQLNotConfigured from "@/components/GraphQLNotConfigured";
+
+const parsePrice = (price: string): string => {
+  const num = parseFloat(price.replace(/[^0-9.]/g, ""));
+  return isNaN(num) ? price : `$${num.toFixed(2)}`;
+};
 
 const Cart = () => {
-  const { items, updateQuantity, removeFromCart, totalPrice } = useCart();
+  const { cart, loading, configured, updateQuantity, removeItem } = useWooCart();
+
+  if (!configured) return <GraphQLNotConfigured />;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-28 pb-24 flex items-center justify-center">
+        <div className="animate-pulse font-elegant text-lg text-muted-foreground italic">Loading cart...</div>
+      </div>
+    );
+  }
+
+  const items = cart?.contents?.nodes ?? [];
 
   if (items.length === 0) {
     return (
@@ -33,47 +51,60 @@ const Cart = () => {
         </motion.h1>
 
         <div className="flex flex-col gap-6">
-          {items.map((item) => (
-            <motion.div
-              key={item.product.id}
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-6 border-b border-border pb-6"
-            >
-              <Link to={`/products/${item.product.id}`} className="w-20 h-20 flex-shrink-0 bg-secondary/30 rounded-sm overflow-hidden">
-                <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
-              </Link>
+          {items.map((item) => {
+            const prod = item.product.node;
+            return (
+              <motion.div
+                key={item.key}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-6 border-b border-border pb-6"
+              >
+                <Link to={`/products/${prod.slug}`} className="w-20 h-20 flex-shrink-0 bg-secondary/30 rounded-sm overflow-hidden">
+                  <img src={prod.image?.sourceUrl} alt={prod.image?.altText || prod.name} className="w-full h-full object-cover" />
+                </Link>
 
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display text-lg text-foreground">{item.product.name}</h3>
-                <p className="font-elegant text-sm text-muted-foreground italic">{item.product.size}</p>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-display text-lg text-foreground">{prod.name}</h3>
+                  <p className="font-elegant text-sm text-muted-foreground italic">{parsePrice(prod.price)}</p>
+                </div>
 
-              <div className="flex items-center gap-3">
-                <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="text-muted-foreground hover:text-primary transition-colors">
-                  <Minus className="w-4 h-4" />
+                <div className="flex items-center gap-3">
+                  <button onClick={() => updateQuantity(item.key, item.quantity - 1)} className="text-muted-foreground hover:text-primary transition-colors">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="font-body text-sm w-6 text-center">{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item.key, item.quantity + 1)} className="text-muted-foreground hover:text-primary transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="font-body text-sm w-20 text-right">{parsePrice(item.total)}</p>
+
+                <button onClick={() => removeItem(item.key)} className="text-muted-foreground hover:text-destructive transition-colors">
+                  <X className="w-4 h-4" />
                 </button>
-                <span className="font-body text-sm w-6 text-center">{item.quantity}</span>
-                <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="text-muted-foreground hover:text-primary transition-colors">
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              <p className="font-body text-sm w-20 text-right">${(item.product.price * item.quantity).toFixed(2)}</p>
-
-              <button onClick={() => removeFromCart(item.product.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="mt-10 border-t border-border pt-8">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col gap-2 mb-6">
+            <div className="flex justify-between">
+              <span className="font-body text-sm text-muted-foreground">Subtotal</span>
+              <span className="font-body text-sm text-foreground">{parsePrice(cart?.subtotal ?? "0")}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-body text-sm text-muted-foreground">Shipping</span>
+              <span className="font-body text-sm text-foreground">{parsePrice(cart?.shippingTotal ?? "0")}</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-center mb-8 border-t border-border pt-4">
             <span className="font-body text-sm tracking-luxury uppercase text-muted-foreground">Total</span>
-            <span className="font-display text-2xl text-foreground">${totalPrice.toFixed(2)}</span>
+            <span className="font-display text-2xl text-foreground">{parsePrice(cart?.total ?? "0")}</span>
           </div>
           <Link
             to="/checkout"

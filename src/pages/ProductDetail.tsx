@@ -1,14 +1,33 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import { products } from "@/data/products";
-import { useCart } from "@/context/CartContext";
+import { useProduct } from "@/hooks/useProducts";
+import { useWooCart } from "@/hooks/useWooCart";
 import { toast } from "sonner";
+import GraphQLNotConfigured from "@/components/GraphQLNotConfigured";
+import { ProductDetailSkeleton } from "@/components/LoadingSkeleton";
+
+const parsePrice = (price: string): string => {
+  const num = parseFloat(price.replace(/[^0-9.]/g, ""));
+  return isNaN(num) ? price : `$${num.toFixed(2)}`;
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const { addToCart } = useCart();
-  const product = products.find((p) => p.id === id);
+  const { product, loading, configured } = useProduct(id);
+  const { addToCart } = useWooCart();
+
+  if (!configured) return <GraphQLNotConfigured />;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-28 pb-24">
+        <div className="container mx-auto px-6">
+          <ProductDetailSkeleton />
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -18,10 +37,19 @@ const ProductDetail = () => {
     );
   }
 
-  const handleAdd = () => {
-    addToCart(product);
-    toast.success(`${product.name} added to cart`);
+  const handleAdd = async () => {
+    try {
+      await addToCart(product.databaseId);
+      toast.success(`${product.name} added to cart`);
+    } catch {
+      toast.error("Failed to add to cart");
+    }
   };
+
+  const allImages = [
+    product.image,
+    ...(product.galleryImages?.nodes ?? []),
+  ].filter(Boolean);
 
   return (
     <div className="min-h-screen pt-28 pb-24">
@@ -35,9 +63,20 @@ const ProductDetail = () => {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
-            className="aspect-square bg-secondary/30 rounded-sm overflow-hidden"
+            className="flex flex-col gap-4"
           >
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+            <div className="aspect-square bg-secondary/30 rounded-sm overflow-hidden">
+              <img src={product.image?.sourceUrl} alt={product.image?.altText || product.name} className="w-full h-full object-cover" />
+            </div>
+            {allImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {allImages.slice(1, 5).map((img, i) => (
+                  <div key={i} className="aspect-square bg-secondary/30 rounded-sm overflow-hidden">
+                    <img src={img.sourceUrl} alt={img.altText || ""} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -48,29 +87,28 @@ const ProductDetail = () => {
           >
             <p className="font-body text-xs tracking-luxury uppercase text-muted-foreground mb-2">Saint Samson Paris</p>
             <h1 className="font-display text-4xl md:text-5xl text-foreground mb-2">{product.name}</h1>
-            <p className="font-elegant text-lg text-primary italic mb-6">{product.tagline}</p>
-            <p className="font-body text-2xl text-foreground mb-8">${product.price.toFixed(2)} <span className="text-sm text-muted-foreground">/ {product.size}</span></p>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-10">{product.description}</p>
+            {product.sku && (
+              <p className="font-body text-xs text-muted-foreground mb-4">SKU: {product.sku}</p>
+            )}
+            <p className="font-body text-2xl text-foreground mb-4">{parsePrice(product.price)}</p>
 
-            {/* Notes */}
-            <div className="grid grid-cols-3 gap-6 mb-10 border-t border-b border-border py-8">
-              {(["top", "heart", "base"] as const).map((type) => (
-                <div key={type}>
-                  <p className="font-body text-xs tracking-luxury uppercase text-muted-foreground mb-3">
-                    {type === "top" ? "Top Notes" : type === "heart" ? "Heart Notes" : "Base Notes"}
-                  </p>
-                  {product.notes[type].map((n) => (
-                    <p key={n} className="font-elegant text-sm text-foreground">{n}</p>
-                  ))}
-                </div>
-              ))}
-            </div>
+            {product.stockStatus === "OUT_OF_STOCK" ? (
+              <p className="font-body text-sm text-destructive mb-8">Out of Stock</p>
+            ) : (
+              <p className="font-body text-sm text-primary mb-8">In Stock</p>
+            )}
+
+            <div
+              className="font-body text-sm text-muted-foreground leading-relaxed mb-10 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: product.description || "" }}
+            />
 
             <button
               onClick={handleAdd}
-              className="w-full font-body text-xs tracking-luxury uppercase bg-primary text-primary-foreground py-4 hover:bg-primary/90 transition-colors"
+              disabled={product.stockStatus === "OUT_OF_STOCK"}
+              className="w-full font-body text-xs tracking-luxury uppercase bg-primary text-primary-foreground py-4 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add to Cart
+              {product.stockStatus === "OUT_OF_STOCK" ? "Sold Out" : "Add to Cart"}
             </button>
           </motion.div>
         </div>
