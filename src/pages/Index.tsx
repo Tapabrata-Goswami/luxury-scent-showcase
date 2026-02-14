@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/components/ProductCard";
+import GraphQLNotConfigured from "@/components/GraphQLNotConfigured";
+import { ProductGridSkeleton } from "@/components/LoadingSkeleton";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const Index = () => {
+  const { products, loading, configured } = useProducts();
   const { addToCart } = useCart();
 
   return (
@@ -55,7 +58,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Best Sellers */}
+      {/* Best Sellers — dynamic from GraphQL */}
       <section className="py-24">
         <div className="container mx-auto px-6">
           <motion.h2
@@ -66,11 +69,22 @@ const Index = () => {
           >
             Best Sellers
           </motion.h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-            {products.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
+
+          {!configured ? (
+            <GraphQLNotConfigured />
+          ) : loading ? (
+            <ProductGridSkeleton />
+          ) : products.length === 0 ? (
+            <p className="text-center font-elegant text-lg text-muted-foreground italic">
+              No products found. Add products in WooCommerce.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+              {products.slice(0, 5).map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -89,12 +103,12 @@ const Index = () => {
             <p className="font-elegant text-lg text-muted-foreground mb-8">
               Best Value · Perfect for Gifting · Travel-Ready 10mL
             </p>
-            <button
-              onClick={() => products.forEach((p) => addToCart(p))}
-              className="font-body text-xs tracking-luxury uppercase bg-gold-gradient text-primary-foreground px-10 py-4 hover:opacity-90 transition-opacity"
+            <Link
+              to="/products"
+              className="font-body text-xs tracking-luxury uppercase bg-gold-gradient text-primary-foreground px-10 py-4 hover:opacity-90 transition-opacity inline-block"
             >
-              Build Your Set
-            </button>
+              Explore Collection
+            </Link>
           </motion.div>
         </div>
       </section>

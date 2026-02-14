@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import logo from "@/assets/logo.jpeg";
+import logo from "@/assets/logo-transparent.png";
 
 const Header = () => {
   const { totalItems } = useCart();

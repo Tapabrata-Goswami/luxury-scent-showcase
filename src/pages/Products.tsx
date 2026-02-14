@@ -1,8 +1,14 @@
 import { motion } from "framer-motion";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/ProductCard";
+import GraphQLNotConfigured from "@/components/GraphQLNotConfigured";
+import { ProductGridSkeleton } from "@/components/LoadingSkeleton";
 
 const Products = () => {
+  const { products, loading, configured } = useProducts();
+
+  if (!configured) return <GraphQLNotConfigured />;
+
   return (
     <div className="min-h-screen pt-28 pb-24">
       <div className="container mx-auto px-6">
@@ -16,11 +22,19 @@ const Products = () => {
           <p className="font-elegant text-lg text-muted-foreground italic">Discover your signature scent</p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 md:gap-10">
-          {products.map((product, i) => (
-            <ProductCard key={product.id} product={product} index={i} />
-          ))}
-        </div>
+        {loading ? (
+          <ProductGridSkeleton />
+        ) : products.length === 0 ? (
+          <p className="text-center font-elegant text-lg text-muted-foreground italic">
+            No products found. Add products in WooCommerce.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 md:gap-10">
+            {products.map((product, i) => (
+              <ProductCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
